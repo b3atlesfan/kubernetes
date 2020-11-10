@@ -125,7 +125,7 @@ var _ = SIGDescribe("Device Plugin", func() {
 		framework.ExpectNoError(dxdiagDirectxVersionErr, "failed: didn't find directX version dxdiag output.")
 
 		dxdiagVendorID := "Vendor ID: 0x10DE"
-		_, dxdiagVendorIdErr := framework.LookForStringInPodExec(ns, windowsPod.Name, dxdiag_command, dxdiagVendorID, time.Minute)
+		_, dxdiagVendorIdErr := framework.LookForStringInPodExec(ns, windowsPod.Name, dxdiagCommand, dxdiagVendorID, time.Minute)
 		framework.ExpectNoError(dxdiagVendorIdErr, "failed: didn't find vendorID in dxdiag output.")
 
 		envVarCommand := []string{"cmd.exe", "/c", "set", "DIRECTX_GPU_Name"}
