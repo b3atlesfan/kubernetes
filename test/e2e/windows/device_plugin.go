@@ -119,9 +119,14 @@ var _ = SIGDescribe("Device Plugin", func() {
 		windowsPod = f.PodClient().CreateSync(windowsPod)
 
 		ginkgo.By("verifying device access in Windows testing Pod")
-		command := []string{"cmd.exe", "/c", "dxdiag", "/t", "dxdiag_output.txt", "&", "type", "dxdiag_output.txt"}
-		expectedString := "Todo: DirectX Version: DirectX 12"
-		_, err := framework.LookForStringInPodExec(ns, windowsPod.Name, command, expectedString, time.Minute)
+		dxdiag_command := []string{"cmd.exe", "/c", "dxdiag", "/t", "dxdiag_output.txt", "&", "type", "dxdiag_output.txt"}
+		dxdiag_expectedString := "Todo: DirectX Version: DirectX 12"
+		_, err := framework.LookForStringInPodExec(ns, windowsPod.Name, dxdiag_command, dxdiag_expectedString, time.Minute)
 		framework.ExpectNoError(err, "failed: didn't find expected string in dxdiag output.")
+		
+		env_command := []string{"cmd.exe", "/c", "set", "DIRECTX_GPU_Name"}
+		env_expectedString := "DIRECTX_GPU_Name="
+		_, err := framework.LookForStringInPodExec(ns, windowsPod.Name, env_command, env_expectedString2, time.Minute)
+		framework.ExpectNoError(err, "failed: didn't find expected environment variable.")
 	})
 })
