@@ -17,15 +17,17 @@ limitations under the License.
 package windows
 
 import (
-//	"context"
+	"context"
 	"time"
 
-//	v1 "k8s.io/api/core/v1"
-//	clientset "k8s.io/client-go/kubernetes"
+	v1 "k8s.io/api/core/v1"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/test/e2e/framework"
-//	appsv1 "k8s.io/api/apps/v1"
-//	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	e2eskipper "k8s.io/kubernetes/test/e2e/framework/skipper"
+	imageutils "k8s.io/kubernetes/test/utils/image"
+
 
 	"github.com/onsi/ginkgo"
 )
@@ -33,25 +35,25 @@ import (
 var _ = SIGDescribe("Device Plugin", func() {
 	f := framework.NewDefaultFramework("device-plugin")
 
-//	var cs clientset.Interface
+	var cs clientset.Interface
 
 	ginkgo.BeforeEach(func() {
 		//Only for Windows containers
 		e2eskipper.SkipUnlessNodeOSDistroIs("windows")
-//		cs = f.ClientSet
+		cs = f.ClientSet
 	})
 	ginkgo.It("should be able to create a functioning device plugin for Windows", func() {
 		ginkgo.By("creating Windows device plugin daemonset")
-//		dsName := "directx-device-plugin"
-//		daemonsetNameLabel := "daemonset-name"
-//		image := "directxplugin"
-//		mountName := "device-plugin"
-//		mountPath := "/var/lib/kubelet/device-plugins"
-//		privileged := true
-/*		labels := map[string]string{
+		dsName := "directx-device-plugin"
+		daemonsetNameLabel := "daemonset-name"
+		image := "directxplugin"
+		mountName := "device-plugin"
+		mountPath := "/var/lib/kubelet/device-plugins"
+		privileged := true
+		labels := map[string]string{
 			daemonsetNameLabel: dsName,
-		}*/
-/*        	ds := &appsv1.DaemonSet{
+		}
+        	ds := &appsv1.DaemonSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: dsName,
 				Namespace: "kube-system",
@@ -106,19 +108,34 @@ var _ = SIGDescribe("Device Plugin", func() {
 				},
 			},
 		}
-*/
+
 		ns := f.Namespace.Name
-//		ds, err := cs.AppsV1().DaemonSets(ns).Create(context.TODO(), ds, metav1.CreateOptions{})
-//		framework.ExpectNoError(err)
+		ds, err := cs.AppsV1().DaemonSets(ns).Create(context.TODO(), ds, metav1.CreateOptions{})
+		framework.ExpectNoError(err)
 
 		ginkgo.By("creating Windows testing Pod")
-		windowsPod := createTestPod(f, windowsBusyBoximage, windowsOS)
+		windowsPod := createTestPod(f, imageutils.GetE2EImage(imageutils.WindowsServer), windowsOS)
+		windowsPod.Spec.Containers[0].Args = []string{"powershell.exe", "Start-Sleep", "3600" }
 		windowsPod = f.PodClient().CreateSync(windowsPod)
 
 		ginkgo.By("verifying device access in Windows testing Pod")
-		command := []string{"cmd.exe", "/c", "dxdiag", "/t", "dxdiag_output.txt", "&", "type", "dxdiag_output.txt"}
-		expectedString := "Todo: DirectX Version: DirectX 12"
-		_, err := framework.LookForStringInPodExec(ns, windowsPod.Name, command, expectedString, time.Minute)
-		framework.ExpectNoError(err, "failed: didn't find expected string in dxdiag output.")
+
+		dxdiagCommand := []string{"cmd.exe", "/c", "dxdiag", "/t", "dxdiag_output.txt", "&", "type", "dxdiag_output.txt"}
+		dxdiagDirectxVersion := "Todo: DirectX Version: DirectX 12"
+		_, dxdiagDirectxVersionErr := framework.LookForStringInPodExec(ns, windowsPod.Name, dxdiagCommand, dxdiagDirectxVersion, time.Minute)
+		framework.ExpectNoError(dxdiagDirectxVersionErr, "failed: didn't find directX version dxdiag output.")
+
+		dxdiagDdiVersion := "DDI Version: 12"
+		_, dxdiagDdiVersionErr := framework.LookForStringInPodExec(ns, windowsPod.Name, dxdiagCommand, dxdiagDdiVersion, time.Minute)
+		framework.ExpectNoError(dxdiagDdiVersionErr, "failed: didn't find DDI version in dxdiag output.")
+
+		dxdiagVendorID := "Vendor ID: 0x10DE"
+		_, dxdiagVendorIdErr := framework.LookForStringInPodExec(ns, windowsPod.Name, dxdiagCommand, dxdiagVendorID, time.Minute)
+		framework.ExpectNoError(dxdiagVendorIdErr, "failed: didn't find vendorID in dxdiag output.")
+
+		envVarCommand := []string{"cmd.exe", "/c", "set", "DIRECTX_GPU_Name"}
+		envVarDirectxGpuName := "DIRECTX_GPU_Name="
+		_, envVarDirectxGpuNameErr := framework.LookForStringInPodExec(ns, windowsPod.Name, envVarCommand, envVarDirectxGpuName, time.Minute)
+		framework.ExpectNoError(envVarDirectxGpuNameErr, "failed: didn't find expected environment variable.")
 	})
 })
