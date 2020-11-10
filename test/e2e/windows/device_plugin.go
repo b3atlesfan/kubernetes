@@ -124,6 +124,10 @@ var _ = SIGDescribe("Device Plugin", func() {
 		_, dxdiagDirectxVersionErr := framework.LookForStringInPodExec(ns, windowsPod.Name, dxdiagCommand, dxdiagDirectxVersion, time.Minute)
 		framework.ExpectNoError(dxdiagDirectxVersionErr, "failed: didn't find directX version dxdiag output.")
 
+		dxdiagDdiVersion := "DDI Version: 12"
+		_, dxdiagDdiVersionErr := framework.LookForStringInPodExec(ns, windowsPod.Name, dxdiagCommand, dxdiagDdiVersion, time.Minute)
+		framework.ExpectNoError(dxdiagDdiVersionErr, "failed: didn't find DDI version in dxdiag output.")
+
 		dxdiagVendorID := "Vendor ID: 0x10DE"
 		_, dxdiagVendorIdErr := framework.LookForStringInPodExec(ns, windowsPod.Name, dxdiagCommand, dxdiagVendorID, time.Minute)
 		framework.ExpectNoError(dxdiagVendorIdErr, "failed: didn't find vendorID in dxdiag output.")
