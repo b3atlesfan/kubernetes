@@ -109,9 +109,12 @@ func NewContainerManager(mountUtil mount.Interface, cadvisorInterface cadvisor.I
 		cadvisorInterface: cadvisorInterface,
 	}
 
-	klog.Infof("Creating device plugin manager: %t", devicePluginEnabled)
-	if devicePluginEnabled {
-		cm.deviceManager, err = devicemanager.NewManagerImpl(nil, cm.topologyManager)
+        	cm.topologyManager = topologymanager.NewFakeManager()
+
+        	klog.Infof("Creating device plugin manager: %t", devicePluginEnabled)
+        	if devicePluginEnabled {
+        	        cm.deviceManager, err = devicemanager.NewManagerImpl(nil, cm.topologyManager)
+         	        cm.topologyManager.AddHintProvider(cm.deviceManager)
 	} else {
 		cm.deviceManager, err = devicemanager.NewManagerStub()
 	}
