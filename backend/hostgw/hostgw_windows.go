@@ -148,6 +148,7 @@ func (be *HostgwBackend) RegisterNetwork(ctx context.Context, wg sync.WaitGroup,
 					GatewayAddress: expectedGatewayAddress,
 				},
 			},
+			NetworkAdapterName: "Ethernet",
 		}
 		jsonRequest, err := json.Marshal(expectedNetwork)
 		if err != nil {
